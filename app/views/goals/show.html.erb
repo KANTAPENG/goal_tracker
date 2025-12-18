@@ -1,0 +1,39 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1><%= @goal.title %></h1>
+  <div>
+    <%= link_to "編輯", edit_goal_path(@goal), class: "btn btn-secondary" %>
+    <%= link_to "返回列表", goals_path, class: "btn btn-outline-secondary" %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="mb-3">
+      <h5 class="card-title">描述</h5>
+      <p class="card-text">
+        <% if @goal.description.present? %>
+          <%= simple_format(@goal.description) %>
+        <% else %>
+          <em class="text-muted">無描述</em>
+        <% end %>
+      </p>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <h5>狀態</h5>
+        <span class="badge bg-<%= @goal.status == 'completed' ? 'success' : @goal.status == 'in_progress' ? 'warning' : 'secondary' %> fs-6">
+          <%= @goal.status == 'not_started' ? '未開始' : @goal.status == 'in_progress' ? '進行中' : '已完成' %>
+        </span>
+      </div>
+      <div class="col-md-6">
+        <h5>截止日期</h5>
+        <p class="mb-0"><%= @goal.deadline.strftime("%Y年%m月%d日") %></p>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <%= link_to "刪除目標", @goal, data: { turbo_method: :delete, turbo_confirm: "確定要刪除這個目標嗎？" }, class: "btn btn-danger" %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,42 @@
+<%= form_with model: @goal, local: true do |form| %>
+  <% if @goal.errors.any? %>
+    <div class="alert alert-danger">
+      <h4><%= pluralize(@goal.errors.count, "個錯誤") %> 阻止了目標的保存：</h4>
+      <ul class="mb-0">
+        <% @goal.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :title, "標題", class: "form-label" %>
+    <%= form.text_field :title, class: "form-control", required: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :description, "描述", class: "form-label" %>
+    <%= form.text_area :description, class: "form-control", rows: 5 %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :deadline, "截止日期", class: "form-label" %>
+    <%= form.date_field :deadline, class: "form-control", required: true, min: Date.today %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :status, "狀態", class: "form-label" %>
+    <%= form.select :status, options_for_select([
+      ['未開始', 'not_started'],
+      ['進行中', 'in_progress'],
+      ['已完成', 'completed']
+    ], @goal.status), {}, { class: "form-select" } %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.submit "儲存", class: "btn btn-primary" %>
+    <%= link_to "取消", goals_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>
+
