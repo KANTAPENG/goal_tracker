@@ -32,6 +32,22 @@
       </div>
     </div>
 
+    <div class="mb-3">
+      <h5>進度</h5>
+      <p class="mb-1"><%= @goal.progress %>%</p>
+      <div class="progress" style="height: 1.5rem;">
+        <div
+          class="progress-bar <%= @goal.progress == 100 ? 'bg-success' : 'bg-info' %>"
+          role="progressbar"
+          style="width: <%= @goal.progress %>%"
+          aria-valuenow="<%= @goal.progress %>"
+          aria-valuemin="0"
+          aria-valuemax="100">
+          <%= @goal.progress %>%
+        </div>
+      </div>
+    </div>
+
     <div class="mt-4">
       <%= link_to "刪除目標", @goal, data: { turbo_method: :delete, turbo_confirm: "確定要刪除這個目標嗎？" }, class: "btn btn-danger" %>
     </div>
