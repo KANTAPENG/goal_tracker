@@ -8,5 +8,9 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   root "goals#index"
 
-  resources :goals
+  patch "subtasks/reorder", to: "subtasks#reorder"
+
+  resources :goals do
+    resources :subtasks, only: [:create, :update, :destroy]
+  end
 end

@@ -1,5 +1,6 @@
 class Goal < ApplicationRecord
   belongs_to :user
+  has_many :subtasks, dependent: :destroy
 
   enum status: {
     not_started: 0,
@@ -9,34 +10,40 @@ class Goal < ApplicationRecord
 
   validates :title, presence: true
   validates :deadline, presence: true
-  validates :progress,
-            numericality: {
-              only_integer: true,
-              greater_than_or_equal_to: 0,
-              less_than_or_equal_to: 100
-            }
-  before_validation :normalize_progress_and_status
   validate :deadline_must_be_in_future
+
+  def progress_percentage
+    calculated_progress, = calculate_progress
+
+    calculated_progress
+  end
+
+  # 由子任務變動時呼叫，用來重新計算並儲存目標進度
+  def recalculate_progress_with_lock!
+    with_lock do
+      calculated_progress, completed_count, total_count = calculate_progress
+
+      attributes_to_update = { progress: calculated_progress }
+
+      if total_count.positive? && completed_count == total_count
+        attributes_to_update[:status] = :completed
+      end
+
+      update!(attributes_to_update)
+    end
+  end
 
   private
 
-  def normalize_progress_and_status
-    self.progress = 0 if progress.nil?
+  # 回傳 [progress_percentage(Integer), completed_count(Integer), total_count(Integer)]
+  def calculate_progress
+    total = subtasks.count
+    return [0, 0, 0] unless total.positive?
 
-    # 當 status 為 completed 時，自動將 progress 設為 100
-    if status == "completed"
-      self.progress = 100
-    end
+    completed_count = subtasks.where(completed: true).count
+    progress_value = ((completed_count.to_f / total) * 100).round
 
-    # 若 progress = 100，自動將狀態設為 completed
-    if progress == 100
-      self.status = "completed"
-    end
-
-    # 保證當 progress < 100 時，status 不會是 completed
-    if progress < 100 && status == "completed"
-      self.status = "in_progress"
-    end
+    [progress_value, completed_count, total]
   end
 
   def deadline_must_be_in_future
@@ -47,3 +54,4 @@ class Goal < ApplicationRecord
     end
   end
 end
+

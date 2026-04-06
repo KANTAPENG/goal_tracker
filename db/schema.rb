@@ -10,17 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_12_23_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_01_07_000000) do
   create_table "goals", force: :cascade do |t|
     t.string "title", null: false
     t.text "description"
     t.date "deadline", null: false
     t.integer "status", default: 0, null: false
-    t.integer "progress", default: 0, null: false
     t.integer "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "progress", default: 0, null: false
     t.index ["user_id"], name: "index_goals_on_user_id"
+  end
+
+  create_table "subtasks", force: :cascade do |t|
+    t.integer "goal_id", null: false
+    t.string "title", null: false
+    t.boolean "completed", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "position", null: false
+    t.index ["goal_id", "position"], name: "index_subtasks_on_goal_id_and_position", unique: true
+    t.index ["goal_id"], name: "index_subtasks_on_goal_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -36,4 +47,5 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_23_000000) do
   end
 
   add_foreign_key "goals", "users"
+  add_foreign_key "subtasks", "goals"
 end
