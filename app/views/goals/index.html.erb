@@ -1,6 +1,80 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h1>我的目標</h1>
-  <%= link_to "新增目標", new_goal_path, class: "btn btn-primary" %>
+  <div>
+    <h1 class="h3 mb-1">
+      <i class="bi bi-bullseye me-2 text-primary"></i>
+      我的目標
+    </h1>
+    <p class="text-muted mb-0">檢視與管理你的所有目標與進度</p>
+  </div>
+  <%= link_to new_goal_path, class: "btn btn-primary" do %>
+    <i class="bi bi-plus-circle me-1"></i>
+    新增目標
+  <% end %>
+</div>
+
+<% total_goals = @goals.size %>
+<% completed_goals = @goals.count { |g| g.status == "completed" } %>
+<% in_progress_goals = @goals.count { |g| g.status == "in_progress" } %>
+<% completion_rate = total_goals.positive? ? ((completed_goals.to_f / total_goals) * 100).round : 0 %>
+
+<div class="dashboard-chart mb-4">
+  <canvas id="completionChart" width="300" height="300"></canvas>
+</div>
+
+<script>
+  document.addEventListener("turbo:load", function () {
+    const ctx = document.getElementById("completionChart");
+    if (!ctx || typeof Chart === "undefined") return;
+
+    const completion = <%= completion_rate %>;
+    const remaining = 100 - completion;
+
+    new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["已完成", "未完成"],
+        datasets: [
+          {
+            data: [completion, remaining],
+            backgroundColor: ["#4f46e5", "#e5e7eb"],
+            borderWidth: 0
+          }
+        ]
+      },
+      options: {
+        cutout: "70%",
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                return context.label + ": " + context.raw + "%";
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+
+<div class="dashboard-stats">
+  <div class="stat-card">
+    <p><i class="bi bi-bullseye me-1 text-primary"></i> 總目標數</p>
+    <h3><%= total_goals %></h3>
+  </div>
+
+  <div class="stat-card">
+    <p><i class="bi bi-check2-circle me-1 text-success"></i> 已完成目標</p>
+    <h3><%= completed_goals %></h3>
+  </div>
+
+  <div class="stat-card">
+    <p><i class="bi bi-lightning-charge me-1 text-warning"></i> 進行中的目標</p>
+    <h3><%= in_progress_goals %></h3>
+  </div>
 </div>
 
 <% if @goals.any? %>
@@ -24,6 +98,21 @@
                 <%= goal.status == 'not_started' ? '未開始' : goal.status == 'in_progress' ? '進行中' : '已完成' %>
               </span>
             </div>
+            <div class="mb-2">
+              <small class="text-muted">
+                進度：<%= goal.progress_percentage %>%
+              </small>
+              <div class="progress mt-1" style="height: 8px;">
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  style="width: <%= goal.progress_percentage %>%"
+                  aria-valuenow="<%= goal.progress_percentage %>"
+                  aria-valuemin="0"
+                  aria-valuemax="100">
+                </div>
+              </div>
+            </div>
             <p class="card-text">
               <small class="text-muted">
                 <strong>截止日期：</strong><%= goal.deadline.strftime("%Y年%m月%d日") %>
@@ -32,9 +121,17 @@
           </div>
           <div class="card-footer bg-transparent">
             <div class="btn-group" role="group">
-              <%= link_to "查看", goal, class: "btn btn-sm btn-outline-primary" %>
-              <%= link_to "編輯", edit_goal_path(goal), class: "btn btn-sm btn-outline-secondary" %>
-              <%= link_to "刪除", goal, data: { turbo_method: :delete, turbo_confirm: "確定要刪除這個目標嗎？" }, class: "btn btn-sm btn-outline-danger" %>
+              <%= link_to goal, class: "btn btn-sm btn-outline-primary" do %>
+                <i class="bi bi-eye me-1"></i> 查看
+              <% end %>
+              <%= link_to edit_goal_path(goal), class: "btn btn-sm btn-outline-secondary" do %>
+                <i class="bi bi-pencil-square me-1"></i> 編輯
+              <% end %>
+              <%= link_to goal,
+                    data: { turbo_method: :delete, turbo_confirm: "確定要刪除這個目標嗎？" },
+                    class: "btn btn-sm btn-outline-danger" do %>
+                <i class="bi bi-trash3 me-1"></i> 刪除
+              <% end %>
             </div>
           </div>
         </div>

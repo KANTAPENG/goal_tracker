@@ -32,18 +32,18 @@
       </div>
     </div>
 
-    <div class="mb-3">
+    <div class="mt-4">
       <h5>進度</h5>
-      <p class="mb-1"><%= @goal.progress %>%</p>
-      <div class="progress" style="height: 1.5rem;">
+      <p class="mb-2"><%= @goal.progress_percentage %>%</p>
+
+      <div class="progress" style="height: 10px;">
         <div
-          class="progress-bar <%= @goal.progress == 100 ? 'bg-success' : 'bg-info' %>"
+          class="progress-bar bg-success"
           role="progressbar"
-          style="width: <%= @goal.progress %>%"
-          aria-valuenow="<%= @goal.progress %>"
+          style="width: <%= @goal.progress_percentage %>%"
+          aria-valuenow="<%= @goal.progress_percentage %>"
           aria-valuemin="0"
           aria-valuemax="100">
-          <%= @goal.progress %>%
         </div>
       </div>
     </div>
@@ -51,5 +51,54 @@
     <div class="mt-4">
       <%= link_to "刪除目標", @goal, data: { turbo_method: :delete, turbo_confirm: "確定要刪除這個目標嗎？" }, class: "btn btn-danger" %>
     </div>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-body">
+    <h5 class="card-title">子目標</h5>
+
+    <% if @goal.subtasks.any? %>
+      <ul class="list-group mb-3 subtask-list" data-controller="sortable">
+        <% @goal.subtasks.order(:position).each do |subtask| %>
+          <li
+            class="list-group-item subtask-item justify-content-between align-items-center"
+            data-id="<%= subtask.id %>">
+            <div class="d-flex align-items-center gap-2 flex-grow-1">
+              <span class="text-muted" data-drag-handle style="cursor: grab;">☰</span>
+
+              <div class="form-check mb-0">
+                <%= form_with model: [@goal, subtask], method: :patch, local: true do |f| %>
+                  <%= f.check_box :completed,
+                    checked: subtask.completed,
+                    class: "form-check-input me-2",
+                    onchange: "this.form.submit()" %>
+
+                  <%= f.label :completed, subtask.title,
+                    class: "form-check-label #{subtask.completed ? 'text-decoration-line-through text-muted' : ''}" %>
+                <% end %>
+              </div>
+            </div>
+
+            <%= link_to [@goal, subtask],
+              data: { turbo_method: :delete, turbo_confirm: "確定刪除？" },
+              class: "btn btn-sm btn-outline-danger" do %>
+              <i class="bi bi-trash3"></i>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-muted">還沒有子目標</p>
+    <% end %>
+
+    <h6>新增子目標</h6>
+
+    <%= form_with(model: [@goal, Subtask.new], local: true) do |f| %>
+      <div class="input-group">
+        <%= f.text_field :title, class: "form-control", placeholder: "輸入子目標..." %>
+        <button class="btn btn-primary">新增</button>
+      </div>
+    <% end %>
   </div>
 </div>

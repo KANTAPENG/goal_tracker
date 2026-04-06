@@ -6,65 +6,108 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-      <div class="container">
-        <%= link_to "目標追蹤系統", root_path, class: "navbar-brand" %>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav me-auto">
-            <% if user_signed_in? %>
-              <li class="nav-item">
-                <%= link_to "我的目標", goals_path, class: "nav-link" %>
-              </li>
-              <li class="nav-item">
-                <%= link_to "新增目標", new_goal_path, class: "nav-link" %>
-              </li>
+    <div class="dashboard-layout d-flex">
+      <aside class="sidebar d-flex flex-column">
+        <div class="logo d-flex align-items-center mb-4">
+          <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px;">
+            <i class="bi bi-bullseye"></i>
+          </div>
+          <div>
+            <div class="fw-semibold">目標追蹤系統</div>
+            <div class="small text-muted">Goal Tracker</div>
+          </div>
+        </div>
+
+        <nav class="flex-grow-1">
+          <% if user_signed_in? %>
+            <%= link_to goals_path, class: "sidebar-link #{'active' if current_page?(goals_path)}" do %>
+              <i class="bi bi-list-check me-2"></i> 我的目標
             <% end %>
-          </ul>
-          <ul class="navbar-nav">
-            <% if user_signed_in? %>
-              <li class="nav-item">
-                <span class="navbar-text me-3">歡迎, <%= current_user.email %></span>
-              </li>
-              <li class="nav-item">
-                <%= link_to "登出", destroy_user_session_path, data: { turbo_method: :delete }, class: "nav-link" %>
-              </li>
-            <% else %>
-              <li class="nav-item">
-                <%= link_to "登入", new_user_session_path, class: "nav-link" %>
-              </li>
-              <li class="nav-item">
-                <%= link_to "註冊", new_user_registration_path, class: "nav-link" %>
-              </li>
+            <%= link_to new_goal_path, class: "sidebar-link #{'active' if current_page?(new_goal_path)}" do %>
+              <i class="bi bi-plus-circle me-2"></i> 新增目標
             <% end %>
-          </ul>
-        </div>
-      </div>
-    </nav>
+          <% end %>
+        </nav>
 
-    <div class="container mt-4">
-      <% if notice %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <%= notice %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      <% end %>
+        <div class="mt-auto pt-3 border-top small">
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary w-100 mb-3"
+            id="dark-mode-toggle">
+            <i class="bi bi-moon-stars me-1"></i>
+            切換深色模式
+          </button>
 
-      <% if alert %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <%= alert %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <% if user_signed_in? %>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <div class="text-muted">登入中</div>
+                <div class="fw-semibold"><%= current_user.email %></div>
+              </div>
+              <%= link_to "登出", destroy_user_session_path,
+                    data: { turbo_method: :delete },
+                    class: "btn btn-sm btn-outline-secondary" %>
+            </div>
+          <% else %>
+            <div class="d-flex flex-column gap-2">
+              <%= link_to "登入", new_user_session_path, class: "btn btn-sm btn-primary" %>
+              <%= link_to "註冊", new_user_registration_path, class: "btn btn-sm btn-outline-secondary" %>
+            </div>
+          <% end %>
         </div>
-      <% end %>
+      </aside>
 
-      <%= yield %>
+      <main class="main-content">
+        <% if notice %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= notice %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% end %>
+
+        <% if alert %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= alert %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% end %>
+
+        <%= yield %>
+      </main>
     </div>
+
+    <script>
+      (function () {
+        const storedTheme = localStorage.getItem("goal_tracker_theme");
+        if (storedTheme === "dark") {
+          document.body.classList.add("dark-mode");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          const toggle = document.getElementById("dark-mode-toggle");
+          if (!toggle) return;
+
+          toggle.addEventListener("click", function () {
+            const body = document.body;
+            body.classList.toggle("dark-mode");
+            const isDark = body.classList.contains("dark-mode");
+            localStorage.setItem("goal_tracker_theme", isDark ? "dark" : "light");
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
